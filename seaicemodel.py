@@ -29,8 +29,6 @@ if userinput.constants == "real":
 else:
     from model.constants_debug import T_air_Stefan, Tm_w, L, c_i, k_i, rho_i, phi_c
 
-# [ ]TODO: Our model for neumann problem not working. Possible reasons: Boundaries resulting in large values
-# [x]NOTE: The model is not working for the neumann boundary condition. The temperature is not converging.
 # [x]NOTE: Added Neumann for Buffo Code and compares well with Matlab code
 
 class SeaIceModel(error_norms):
@@ -54,9 +52,12 @@ class SeaIceModel(error_norms):
         self.Stefan = userinput.Stefan
         self.Buffo = userinput.Buffo
         self.liq_rel = userinput.liq_rel
-        self.phi_c = phi_c
+        self.phi_c = phi_c 
         self.critical_depth = 0.01
-        self.temp_grad = self.dz*(Tm_w - T_air_Stefan)/self.critical_depth     # T_bottom - T_top / depth
+        if self.bc_condition == "Neumann":
+            self.temp_grad = self.dz*(Tm_w - T_air_Stefan)/self.critical_depth     # T_bottom - T_top / depth
+        else:
+            self.temp_grad = None
 
         # Initialize
         self.error_temperature, self.error_temperature_sum, self.error_temperature_sum_weighted = np.zeros(self.nz), np.zeros(self.iter_max), np.zeros(self.iter_max)
@@ -64,7 +65,6 @@ class SeaIceModel(error_norms):
         self.T_Stefan_diff, self.T_Stefan_prev, self.T_k_diff, self.T_k_prev = [], np.zeros(self.nz), [], np.zeros(self.nz)
         self.T_Stefan_list, self.T_k_list, self.T_k_buffo_list,self.thickness_list, self.thickness_list_Buffo = [], [], [], [], []
         
-
         [self.iter_max, self.dt, self.t_passed] = set_up_iter(self.iter_max)
 
         [self.T, self.S, self.phi, self.w] = set_initial_conditions(self.Z, self.nz, T_IC, self.S_IC, P_IC)  # define initial conditons for temperature, brine salinity and liquid fraction
@@ -117,7 +117,7 @@ class SeaIceModel(error_norms):
         counter = 0
 
         # Loop until values converge
-        while T_err > self.T_tol: # TODO: or S_err > S_tol or phi_err > phi_tol:
+        while T_err > self.T_tol: # HACK: or S_err > S_tol or phi_err > phi_tol:
             counter = counter + 1
             if counter > 1 :
                 [T_prev, S_prev, phi_prev] = define_previous_statevariable(T_km1, S_km1, phi_km1)
@@ -127,8 +127,7 @@ class SeaIceModel(error_norms):
             phi_k = update_liquid_fraction( T_km1,S_km1, phi_km1, H_k, H_solid, self.nz, Stefan= self.Stefan)  # BEFORE  
             advection_diffusion = AdvectionDiffusion('temperature', T_km1, T_source, T_initial, 
                                                      phi_k, phi_initial, self.w, self.dt, self.dz, 
-                                                     self.nz, self.t_passed, self.S_IC, Stefan=Stefan, Buffo=Buffo, bc_neumann=None)  # FIXME : Neumann Code
-            # BUG:Neumann condition for our problem
+                                                     self.nz, self.t_passed, self.S_IC, Stefan=Stefan, Buffo=Buffo, bc_neumann=self.temp_grad)  
                 
             thickness, thickness_index = locate_ice_ocean_interface(phi_k, self.dz, self.nz, Stefan = self.Stefan)              
             [T_k , X_wind_T, dt_T] = advection_diffusion.unknowns_matrix()
@@ -189,9 +188,10 @@ class SeaIceModel(error_norms):
                               self.t_passed, self.all_T, self.all_S, self.all_phi, 
                               self.all_H, self.all_H_solid, self.all_w, self.all_thick, 
                               self.all_t_passed, t)
-              
-            self.temp_grad = self.temperature_gradient(phi_k)     # T_bottom - T_top / depth according to Buffo
-
+            if self.bc_condition == "Neumann":
+                self.temp_grad = self.temperature_gradient(phi_k)     # T_bottom - T_top / depth according to Buffo
+            else:
+                self.temp_grad= None
             # depth
             self.depth_stefan_all = stefan_problem(self.all_t_passed) 
             depth_stefan_t = self.depth_stefan_all[t]

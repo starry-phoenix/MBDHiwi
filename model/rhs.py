@@ -56,7 +56,7 @@ def apply_boundary_condition(
         #     B[-1] = Tm_w
         if Stefan is True:
             if bc_neumann is not None:  
-                B[0] = B[0] - 2*factor1[0]*bc_neumann  # TODO: why is there problem with the neumann BC?
+                B[0] = B[0] - 2*factor1[0]*bc_neumann  
             else:        # for FREEZING
                 B[0] = T_air_Stefan #T_air_Stefan #B[-1] + factor1[-1] * T_air_Stefan #T_air_Stefan #B[-1] + factor1[-1] * T_air_Stefan #T_air_Stefan # + factor1[0]*T_air_Stefan
             B[-1] = Tm_w # Dirichlet

@@ -115,13 +115,14 @@ class AdvectionDiffusion:
 
         elif self.argument == "temperature":
             if self.Stefan is True:
-                self.lower_A[-1] = 0
-                self.main_A[0] = 1.0
+                self.lower_A[-1] = 0.0
                 self.main_A[-1] = 1.0
-                if self.temp_grad is not None:  # FIXME: not working # TODO: check if this is correct
+                if self.temp_grad is not None:  
                     self.upper_A[0] = self.upper_A[0] - self.factor1[0]
+                    self.main_A[0] = self.main_A[0]
                 else:
-                    self.upper_A[0] = 0
+                    self.main_A[0] = 1.0
+                    self.upper_A[0] = 0.0
 
             elif self.Buffo is True:
                 self.upper_A[0] = self.upper_A[0] - self.factor1[0]
