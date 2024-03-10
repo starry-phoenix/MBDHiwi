@@ -1,0 +1,34 @@
+# Modify solve_T_S -> rhs.py : DONE
+# Modify seaicemodelstefan_validation as OOP: DONE
+# add Fourier time step condition
+# Coefficients.py need to work from start
+# Plotting conditions: add node step variations
+
+# changes in seaicemodelstefan_validation:
+# 1. create advection_diffusion of solve_T_S.py object : DONE
+# 
+
+# skipped since not relevant to current work
+# 1. rhs.py -> correct for brine movement
+
+
+# constants real scripts: Updated every script with userinput.constants : DONE
+# 1. coefficients.py
+# 2. initial_boundary_conditions.py
+# 3. liquid_fraction.py
+# 4. rhs.py
+# 5. solve_T_S.py
+# 6. StefanProblem.py
+
+# create df with : idea scrapped
+# 
+
+
+# Interesting to investigate: 
+# Initial_boundary_conditions-> T = np.ones(nz, dtype=np.float64) * Tm_w #T_air_Stefan. Why Tm_w constant for constants_real as well? look for real value. 
+#                               Replacing Tm_w with T_air_Stefan gave bad convergence for constants_debug
+
+# Date: 12.10.2023
+# possible bug : depth did not change as it discontinued from the loop when phi[i]<0.01.
+#               When T_IC=T_air_Stefan : numerical interface depth remained 1.5m during the whole simulation
+# ice_depth->L38: break->continue
