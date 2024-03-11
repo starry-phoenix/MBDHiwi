@@ -1,7 +1,8 @@
 import numpy as np
 import sys
+
 class error_norms:
-    def __init__(self, numerical_values, analytical_values) -> None:
+    def __init__(self, numerical_values, analytical_values):
         self.numerical_values = numerical_values
         self.analytical_values = analytical_values
         self.iteration_count = 0
