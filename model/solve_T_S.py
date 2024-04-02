@@ -39,14 +39,18 @@ class AdvectionDiffusion:
         ### Compute a, b, c, d
         self.Delta_W = np.zeros(nz)
         [self.a, self.b, self.c, self.d] = update_coefficients(argument, X_initial, w, W, nz, S_IC)  #
-        self.Delta_W = W - W_initial  # neg: freezing pos: melting
+        self.Delta_W = W - W_initial  # neg: freezing pos: melting and W is phi_k 
         ### Initialize
         self.main_A = np.zeros(nz, dtype=np.float64)
         self.lower_A = np.zeros(nz-1, dtype=np.float64)
         self.upper_A = np.zeros(nz-1, dtype=np.float64)
         self.A = np.zeros([nz, nz], dtype=np.float64)
         self.X_new = np.zeros(nz, dtype=np.float64)
-        self.factor1 = self.factor_1(self.a, self.c, dt, dz, nz)
+        self.factor1 = self.factor_1(argument,self.a, self.c, dt, dz, nz)
+        if argument == "salinity":
+            self.factor1_plus, self.factor1_minus = self.factor1
+        else:
+            pass
         self.factor2 = self.factor_2(self.a, self.b, dt, dz, nz)
         self.factor3 = self.factor_3(self.a, self.d, nz)
 
@@ -99,11 +103,20 @@ class AdvectionDiffusion:
     def set_up_tridiagonal(self):
     ### Set up tridiagonal matrix LHS for Salinity and Temperature
         for i in range(self.nz):
-            self.main_A[i] = 2 * self.factor1[i] + 1.0
-            if i < self.nz - 1:
-                self.upper_A[i] = -self.factor1[i]
-            if i > 0:
-                self.lower_A[i - 1] = -self.factor1[i]
+            if self.argument=="temperature":
+                self.main_A[i] = 2 * self.factor1[i] + 1.0
+                if i < self.nz - 1:
+                    self.upper_A[i] = -self.factor1[i]
+                if i > 0:
+                    self.lower_A[i - 1] = -self.factor1[i]
+
+            elif self.argument=="salinity":
+                self.main_A[i] = 1+ self.factor1_plus[i] + self.factor1_minus[i]
+                if i < self.nz - 1:
+                    self.upper_A[i] = -self.factor1_minus[i]
+                if i > 0:
+                    self.lower_A[i] = -self.factor1_plus[i]
+
 
         if self.argument == "salinity":
             # non-pragmatic Neumann at the top
@@ -177,14 +190,22 @@ class AdvectionDiffusion:
         return X_new, X_wind, self.dt
 
 
-    def factor_1(self,a, c, dt, dz, nz):
+    def factor_1(self,argument,a, c, dt, dz, nz):
         """
         factor 1 and avoid zero divison error
         """
         const1 = dt / (dz**2)
         self.factor1 = np.zeros(nz, dtype=np.float64)
         self.factor1[np.nonzero(a)] = const1 * (c[np.nonzero(a)] / a[np.nonzero(a)])
-        return self.factor1
+
+        if argument=="salinity":
+            factor1_plus = (self.factor1 + np.roll(self.factor1, 1))/2
+            factor1_plus[0] = self.factor1[0]
+            factor1_minus = (self.factor1 + np.roll(self.factor1, -1))/2
+            factor1_minus[-1] = self.factor1[-1]
+            return [factor1_plus, factor1_minus]
+        else:   
+            return self.factor1
 
 
     def factor_2(self,a, b, dt, dz, nz):

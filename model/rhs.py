@@ -45,7 +45,7 @@ def apply_boundary_condition(
         B = B - factor3 * Delta_W
         S_bct, S_bcb = boundary_condition(argument, t_passed, S_IC)
         # as in Buffos code
-        B[0] = B[0] + factor1[0] * X_initial[0]
+        B[0] = B[0] 
         B[-1] = B[-1] + factor1[-1] * S_bcb  # Dirichlet
 
     elif argument == "temperature":

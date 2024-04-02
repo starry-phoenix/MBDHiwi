@@ -117,7 +117,7 @@ class PlotModel(SeaIceModel):
             T_err_buffo = (np.abs(T_k_ - T_k_buffo_))
         index = z_depth*self.nz
         if Buffo_matlab is True:
-            df = pd.read_csv('temp_dirichlet17.csv', sep=',')
+            df = pd.read_csv('MatlabData/temp_dirichletSalinity01.csv', sep=',')
             df_depth = np.array(df[int(z_depth*self.nz)-1: int(z_depth*self.nz)]).reshape(25000,1)
         
         fig1,(ax1) = plt.subplots(figsize=(10,6))
@@ -147,15 +147,3 @@ class PlotModel(SeaIceModel):
 
         df_temp = pd.DataFrame(self.T_k_list)
         df_temp.to_csv(self.folder_name + "/Temperature" + str(self.dz) + '.csv')
-
-if __name__ == "__main__":
-    start = time.time()
-    plot_seaicemodel_obj = PlotModel()
-    plot_seaicemodel_obj.temperature_profile_analytical()
-    end = time.time()
-    run_time = end-start
-    plot_seaicemodel_obj.error_analytical_numerical()
-    plot_seaicemodel_obj.plot_error_temp(5000, norm='inf', savefig=True)     # norm="inf" OR norm="2" OR norm="1"
-    plot_seaicemodel_obj.plot_error_temp_diff(5000, savefig=True)
-    plot_seaicemodel_obj.plot_depth_over_time()
-    plot_seaicemodel_obj.plot_temperature(z_depth=0.1, savefig=True)
