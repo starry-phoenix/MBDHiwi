@@ -4,7 +4,7 @@ from model.rhs import apply_boundary_condition, correct_for_brine_movement
 
 import userinput
 
-# TODO: Add fourier time step case
+# TODO:Think about how to test rhs and solve_T_S
 
 class TestSeaIceModel:
     def test_userinput(self)-> None:

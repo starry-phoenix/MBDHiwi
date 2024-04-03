@@ -30,7 +30,7 @@ phi_tol = 0.001
 
 # Temperature, Salinity and Partion coeff IC
 T_IC='Tm_w'     # OR "T(S)" OR "T271.25" OR 'T_Stefan'
-S_IC='S_linear'           # OR "S_linear" OR "SX" where X is a salinity value; ex S33 with salinity being 33
+S_IC='S10'           # OR "S_linear" OR "SX" where X is a salinity value; ex S33 with salinity being 33
 P_IC='P1'           # OR "P1" OR "P_Stefan" OR 'P0'
 
 # Temperature BC for top layer   

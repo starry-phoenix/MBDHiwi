@@ -7,7 +7,7 @@ They use several formulations and constant provided by Griewank and Notz (2013)
 
 
 ## Define initial values
-S_sw = 0 #34.0
+S_sw = 34.0 #34.0
 T_air = 260.0  # numerical instabilities arise for too low
 T_air_Stefan = 270 #300.0 # FREEZING # MELTING
 phi_ini = 0 # FREEZING

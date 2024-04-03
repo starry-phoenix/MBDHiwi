@@ -120,11 +120,12 @@ class AdvectionDiffusion:
 
         if self.argument == "salinity":
             # non-pragmatic Neumann at the top
-            self.upper_A[0] = -1 * self.factor1[0]
-            self.main_A[0] = 2 * self.factor1[0] + 1
-            # non-pragmatic dirichlet at the bottom
-            self.lower_A[-1] = -1 * self.factor1[-1]
-            self.main_A[-1] = 2 * self.factor1[-1] + 1
+            # self.upper_A[0] = -1 * self.factor1[0]
+            # self.main_A[0] = 2 * self.factor1[0] + 1
+            # # non-pragmatic dirichlet at the bottom
+            # self.lower_A[-1] = -1 * self.factor1[-1]
+            # self.main_A[-1] = 2 * self.factor1[-1] + 1
+            pass
 
         elif self.argument == "temperature":
             if self.Stefan is True:
