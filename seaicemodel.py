@@ -9,7 +9,7 @@ import pandas as pd
 from IPython.display import display, clear_output
 import matplotlib.pyplot as plt
 import seaborn as sns
-from model.StefanProblem import stefan_problem, stefan_temperature, stefan_problem_twophase, stefan_temperature_twophase
+from StefanProblem import stefan_problem, stefan_temperature, stefan_problem_twophase, stefan_temperature_twophase
 from model.ice_depth import locate_ice_ocean_interface
 from model.store import create_directory, set_up_matrices, store_results
 from model.model_geometry import set_model_geometry
@@ -200,7 +200,7 @@ class SeaIceModel(error_norms):
             else:
                 self.depth_stefan_all = stefan_problem_twophase(self.all_t_passed) 
                 depth_stefan_t = self.depth_stefan_all[t]
-                T_Stefan = stefan_temperature_twophase(depth_stefan_t, self.t_passed, self.dz, self.nz)
+                T_Stefan, C_stefan = stefan_temperature_twophase(depth_stefan_t, self.t_passed, self.dz, self.nz)
             error_depth_t = (np.absolute(depth_stefan_t) - np.absolute(self.all_thick[t]))
                
             # compute temperature error and store temperature differences

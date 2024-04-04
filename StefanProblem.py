@@ -10,6 +10,8 @@ if userinput.constants == "real":
 else:
     from model.constants_debug import T_air_Stefan, Tm_w, L, c_i, k_i, rho_i, c_br, k_br, rho_br, D_s, S_sw
 
+S_sw = S_sw/10.0
+
 def stefan_problem(t):
     """
     Computes location of time-dependent phase change interface based on one-phase Stefan problem with Newton iteration
@@ -186,5 +188,5 @@ def plot_stefan_temp_twophase(z_depth=0.5):
     plt.show()
     return T_arr, C_arr
 
-if __name__ == "__main__":
-    T, C = plot_stefan_temp_twophase(0.01)
+# if __name__ == "__main__":
+#     T, C = plot_stefan_temp_twophase(0.01)
