@@ -7,7 +7,7 @@ They use several formulations and constant provided by Griewank and Notz (2013)
 
 
 ## Define initial values
-S_sw = 34.0 #34.0
+S_sw = 34.0/10.0 #34.0
 T_air = 260.0  # numerical instabilities arise for too low
 T_air_Stefan = 270 #300.0 # FREEZING # MELTING
 phi_ini = 0 # FREEZING
@@ -19,7 +19,7 @@ kappa = 1.37 * 10 ** (-7)  # Thermal Diffusivity
 mu = 1.88 * 10 ** (-3)  # Viscosity
 Ra_c = 1.01  # Critical Rayleigh
 alpha = 1.56 * 10 ** (-3)  # Linear coeff for Rayleigh number driven advection
-Tm_w = 273.15  # Melt temperature of pure ice [K]
+Tm_w = 273.15 #273.15  # Melt temperature of pure ice [K]
 k_i = 2.0  #                            # Thermal conductivity (ice) [W/m/K]
 k_br = 0.6  # Thermal conductivity (brine) [W/m/K]
 k_w = k_br #2.0

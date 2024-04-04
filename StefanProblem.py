@@ -91,7 +91,7 @@ def stefan_temperature(depth_stefan, t, dz, nz):
     return T_stefan
 
 
-def analytical_solution_2phase_stefan(depth_stefan, t, dz,nz):
+def stefan_temperature_twophase(depth_stefan, t, dz,nz):
     """
     Analytical solution for the 2-phase Stefan problem.
 
@@ -116,6 +116,8 @@ def analytical_solution_2phase_stefan(depth_stefan, t, dz,nz):
     T_b = T_air_Stefan  # initial temperature of the solid
     T_inf = Tm_w  # melting temperature of the solid at z=inf in a semi-infinite domain
     eps = lambda k: np.sqrt(D_s/k)
+    kappa_i = k_i/(rho_i*c_i)
+    kappa_br = k_br/(rho_br*c_br)
     F_x =lambda x: np.pi**(1/2)*x*np.exp(x**2)*erfc(x)
     C_fi = lambda lamb: S_sw*F_x(lamb)/(1- F_x(lamb))
     S = S_sw + C_fi(depth_stefan)   # C_h
@@ -123,10 +125,10 @@ def analytical_solution_2phase_stefan(depth_stefan, t, dz,nz):
     for i in range(nz_depth):
         if eta[i] < depth_stefan:
             # In the solid phase
-            T[i] = T_b + (T_h - T_b) * math.erf(eps(k_i)*eta[i]) / math.erf(eps(k_i)*depth_stefan)
+            T[i] = T_b + (T_h - T_b) * math.erf(eps(kappa_i)*eta[i]) / math.erf(eps(kappa_i)*depth_stefan)
         else:
             # In the liquid phase
-            T[i] = T_inf + (T_h - T_inf) * erfc(eps(k_br)*eta[i]) / erfc(eps(k_br)*depth_stefan)
+            T[i] = T_inf + (T_h - T_inf) * erfc(eps(kappa_br)*eta[i]) / erfc(eps(kappa_br)*depth_stefan)
             C[i] = S_sw + (S-S_sw) * erfc(eta[i])/erfc(depth_stefan)
 
     return np.array(T), np.array(C)
@@ -142,23 +144,25 @@ def stefan_problem_twophase(t):
     T_L = Tm_w - gamma * S_sw
     T_1 = T_L - T_b
     T_0 = T_inf - T_L
+    kappa_i = k_i/(rho_i*c_i)
+    kappa_br = k_br/(rho_br*c_br)
     beta = rho_br*c_br/(rho_i*c_i)
     C_fi = lambda lamb: gamma*C_0*F_x(lamb)/(1- F_x(lamb))
-    root_fx_lhs = lambda lamb:C_fi(lamb)*(beta/F_x(eps(k_br)*lamb) + 1/G_x(eps(k_i)*lamb))
-    root_fx_rhs = lambda lamb: T_1/G_x(eps(k_i)*lamb) - beta*T_0/F_x(eps(k_br)*lamb) - L/c_i
+    root_fx_lhs = lambda lamb:C_fi(lamb)*(beta/F_x(eps(kappa_br)*lamb) + 1/G_x(eps(kappa_i)*lamb))
+    root_fx_rhs = lambda lamb: T_1/G_x(eps(kappa_i)*lamb) - beta*T_0/F_x(eps(kappa_br)*lamb) - L/c_i
     root_fx = lambda lamb: root_fx_lhs(lamb) - root_fx_rhs(lamb)
-
     lambda_stefan = opt.newton(root_fx, 0.1, tol=1e-3, maxiter=100)
     stefan_depth = 2*lambda_stefan*np.sqrt(D_s*t)
 
     return stefan_depth
 
 def plot_stefan_temp_twophase(z_depth=0.5):
-    dt= 0.1
+    dt= userinput.dt
     t_passed = 0
     T_arr = []
     C_arr = []
     t_pass_arr = []
+    depth_stefan_arr = []
     Z = 1
     nc = int(Z / userinput.dz)
     nz = int(nc + 1)
@@ -166,7 +170,8 @@ def plot_stefan_temp_twophase(z_depth=0.5):
     for t in range(0, userinput.iter_max):
         t_passed = t_passed + dt
         depth_stefan = stefan_problem_twophase(t_passed)
-        T, C = analytical_solution_2phase_stefan(depth_stefan, t, userinput.dz, nz)
+        T, C = stefan_temperature_twophase(depth_stefan, t, userinput.dz, nz)
+        depth_stefan_arr.append(depth_stefan)
         T_arr.append(T)
         C_arr.append(C)
         t_pass_arr.append(t_passed)
@@ -174,11 +179,12 @@ def plot_stefan_temp_twophase(z_depth=0.5):
     T_arr = np.array(T_arr)
     T_z = T_arr[:,z]
     plt.grid()
-    plt.plot(t_pass_arr, T_z, label="Temperature")
-    plt.xlabel("Time")
+    plt.plot(np.array(t_pass_arr)/3600, T_z, label="Temperature")
+    plt.xlabel("Time in h")
     plt.ylabel("Temperature")
     #plt.plot(t_pass_arr, C_arr, label="Salinity")
     plt.show()
+    return T_arr, C_arr
 
 if __name__ == "__main__":
-    plot_stefan_temp_twophase(0.1)
+    T, C = plot_stefan_temp_twophase(0.01)
