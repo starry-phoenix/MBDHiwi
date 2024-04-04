@@ -11,6 +11,9 @@ else:
     from model.constants_debug import T_air_Stefan, Tm_w, L, c_i, k_i, rho_i, c_br, k_br, rho_br, D_s, S_sw
 
 S_sw = S_sw/10.0
+# TODO: check if the concentration is dependent on previous iterations or vice-versa
+# TODO: implement mushy layer consideration with liquid fraction check paper
+
 
 def stefan_problem(t):
     """
@@ -188,5 +191,5 @@ def plot_stefan_temp_twophase(z_depth=0.5):
     plt.show()
     return T_arr, C_arr
 
-# if __name__ == "__main__":
-#     T, C = plot_stefan_temp_twophase(0.01)
+if __name__ == "__main__":
+    T, C = plot_stefan_temp_twophase(0.01)

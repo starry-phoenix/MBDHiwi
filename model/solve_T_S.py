@@ -47,7 +47,7 @@ class AdvectionDiffusion:
         self.A = np.zeros([nz, nz], dtype=np.float64)
         self.X_new = np.zeros(nz, dtype=np.float64)
         self.factor1 = self.factor_1(argument,self.a, self.c, dt, dz, nz)
-        if argument == "salinity":
+        if argument == "salinity1":
             self.factor1_plus, self.factor1_minus = self.factor1
         else:
             pass
@@ -110,12 +110,18 @@ class AdvectionDiffusion:
                 if i > 0:
                     self.lower_A[i - 1] = -self.factor1[i]
 
-            elif self.argument=="salinity":
+            elif self.argument=="salinity1":
                 self.main_A[i] = 1+ self.factor1_plus[i] + self.factor1_minus[i]
                 if i < self.nz - 1:
                     self.upper_A[i] = -self.factor1_minus[i]
                 if i > 0:
                     self.lower_A[i] = -self.factor1_plus[i]
+            else:
+                self.main_A[i] = 2 * self.factor1[i] + 1.0
+                if i < self.nz - 1:
+                    self.upper_A[i] = -self.factor1[i]
+                if i > 0:
+                    self.lower_A[i - 1] = -self.factor1[i]
 
 
         if self.argument == "salinity":
@@ -199,7 +205,7 @@ class AdvectionDiffusion:
         self.factor1 = np.zeros(nz, dtype=np.float64)
         self.factor1[np.nonzero(a)] = const1 * (c[np.nonzero(a)] / a[np.nonzero(a)])
 
-        if argument=="salinity":
+        if argument=="salinity1":
             factor1_plus = (self.factor1 + np.roll(self.factor1, 1))/2
             factor1_plus[0] = self.factor1[0]
             factor1_minus = (self.factor1 + np.roll(self.factor1, -1))/2
