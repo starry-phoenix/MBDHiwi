@@ -15,7 +15,7 @@ from model.store import create_directory, set_up_matrices, store_results
 from model.model_geometry import set_model_geometry
 from model.set_time import set_up_iter, t_total
 from model.initial_boundary_conditions import set_initial_conditions, boundary_condition
-from model.liquid_fraction import update_enthalpy, update_enthalpy_solid_state, update_liquid_fraction
+from model.liquid_fraction import update_enthalpy, update_enthalpy_solid_state, update_liquid_fraction, compute_melting_temperature_from_salinity
 from model.statevariables_errors import reset_error_for_while_loop, compute_error_for_convergence, reset_error_for_while_loop, initialize_statevariables, overwrite_statevariables, set_statevariables, define_previous_statevariable
 from model.solve_T_S import AdvectionDiffusion
 import time
@@ -64,7 +64,9 @@ class SeaIceModel(error_norms):
         self.thickness_index_total, depth_stefan_all = np.zeros(self.iter_max), np.zeros(self.iter_max)
         self.T_Stefan_diff, self.T_Stefan_prev, self.T_k_diff, self.T_k_prev = [], np.zeros(self.nz), [], np.zeros(self.nz)
         self.T_Stefan_list, self.T_k_list, self.T_k_buffo_list,self.thickness_list, self.thickness_list_Buffo = [], [], [], [], []
-        
+        self.phi_k_list, self.phi_buffo_list = [], []
+        self.S_k_list, self.S_buffo_list = [], []
+        self.H_k_list, self.H_solid_list = [], []
         [self.iter_max, self.dt, self.t_passed] = set_up_iter(self.iter_max)
 
         [self.T, self.S, self.phi, self.w] = set_initial_conditions(self.Z, self.nz, T_IC, self.S_IC, P_IC)  # define initial conditons for temperature, brine salinity and liquid fraction
@@ -117,21 +119,26 @@ class SeaIceModel(error_norms):
         counter = 0
 
         # Loop until values converge
-        while T_err > self.T_tol: # HACK: or S_err > S_tol or phi_err > phi_tol:
+        while T_err > self.T_tol or S_err > self.S_tol: #or phi_err > phi_tol:
             counter = counter + 1
             if counter > 1 :
                 [T_prev, S_prev, phi_prev] = define_previous_statevariable(T_km1, S_km1, phi_km1)
 
             H_k = update_enthalpy(T_km1, S_km1, phi_km1, self.nz)
             H_solid = update_enthalpy_solid_state( S_km1, self.nz, liq_rel=self.liq_rel) 
-            phi_k = update_liquid_fraction( T_km1,S_km1, phi_km1, H_k, H_solid, self.nz, Stefan= self.Stefan)  # BEFORE  
-            advection_diffusion = AdvectionDiffusion('temperature', T_km1, T_source, T_initial, 
+            phi_k, T_km1 = update_liquid_fraction( T_km1,S_km1, phi_km1, H_k, H_solid, self.nz, Stefan= self.Stefan)  # BEFORE  
+            advection_diffusion_temp = AdvectionDiffusion('temperature', T_km1, T_source, T_initial, 
                                                      phi_k, phi_initial, self.w, self.dt, self.dz, 
                                                      self.nz, self.t_passed, self.S_IC, Stefan=Stefan, Buffo=Buffo, bc_neumann=self.temp_grad)  
-                
-            thickness, thickness_index = locate_ice_ocean_interface(phi_k, self.dz, self.nz, Stefan = self.Stefan)              
-            [T_k , X_wind_T, dt_T] = advection_diffusion.unknowns_matrix()
-            S_k = S_km1
+
+            [T_k , X_wind_T, dt_T] = advection_diffusion_temp.unknowns_matrix()
+            phi_k.where(0<phi_k<1)
+            advection_diffusion_salinity = AdvectionDiffusion('salinity', S_km1, T_source, S_initial, 
+                                                     phi_k, phi_initial, self.w, self.dt, self.dz, 
+                                                     self.nz, self.t_passed, self.S_IC, Stefan=Stefan, Buffo=Buffo, bc_neumann=self.temp_grad)  
+            [S_k , X_wind_S, dt_S] = advection_diffusion_salinity.unknowns_matrix()
+            #S_k = S_km1  # for one phase diffusion only
+            thickness, thickness_index = locate_ice_ocean_interface(phi_k, self.dz, self.nz, Stefan = self.Stefan)
             #phi_k = update_liquid_fraction( T_k,S_k, phi_km1, H_k, H_solid, self.nz, Stefan= self.Stefan)   # AFTER
             [T_km1, S_km1, phi_km1] = overwrite_statevariables(T_k, S_k, phi_k)
             
@@ -188,6 +195,7 @@ class SeaIceModel(error_norms):
                               self.t_passed, self.all_T, self.all_S, self.all_phi, 
                               self.all_H, self.all_H_solid, self.all_w, self.all_thick, 
                               self.all_t_passed, t)
+            
             if self.bc_condition == "Neumann":
                 self.temp_grad = self.temperature_gradient(phi_k)     # T_bottom - T_top / depth according to Buffo
             else:
@@ -217,8 +225,14 @@ class SeaIceModel(error_norms):
             if self.Buffo is True:
                 self.T_k_buffo_list.append(T_k_buffo)
                 self.thickness_list_Buffo.append(thickness_buffo)
+                self.phi_buffo_list.append(phi_k_buffo)
             self.thickness_list.append(thickness)
-            
+            self.phi_k_list.append(phi_k)
+            self.S_k_list.append(S_k)
+            self.S_buffo_list.append(S_k_buffo)
+            self.H_k_list.append(H_k)
+            self.H_solid_list.append(H_solid)
+
             if t%5000 == 0:  # plot after every 500 time steps
                 count = count + 1
                 self.T_running(fig1, ax1, T_Stefan, T_k=T_k, T_k_buffo=T_k_buffo, count=count)
@@ -229,6 +243,12 @@ class SeaIceModel(error_norms):
         self.T_k_diff = np.array(self.T_k_diff)
         self.T_Stefan_diff= np.array(self.T_Stefan_diff)
         self.T_k_buffo_list = np.array(self.T_k_buffo_list)
+        self.phi_k_list = np.array(self.phi_k_list)
+        self.S_k_list = np.array(self.S_k_list)
+        self.phi_buffo_list = np.array(self.phi_buffo_list)
+        self.S_buffo_list = np.array(self.S_buffo_list)
+        self.H_solid_list = np.array(self.H_solid_list)
+        self.H_k_list = np.array(self.H_k_list)
 
         error_norms.__init__(self, self.T_k_list, self.T_Stefan_list)
 

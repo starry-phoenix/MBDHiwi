@@ -147,3 +147,109 @@ class PlotModel(SeaIceModel):
 
         df_temp = pd.DataFrame(self.T_k_list)
         df_temp.to_csv(self.folder_name + "/Temperature" + str(self.dz) + '.csv')
+
+    def plot_phi(self, timestep, savefig=True):
+        x_axis_iter = np.arange(0,101,1)
+        #x_axis_iter = np.arange(0,22970,1)
+        index = timestep*3600/self.dt
+        phi_k = self.phi_k_list[int(index)]
+        if self.Buffo is True:
+            phi_buffo = self.phi_buffo_list[int(index)]
+        
+        fig1,(ax1) = plt.subplots(figsize=(10,6))
+        plt.grid()
+        ax1.plot(x_axis_iter*self.dt/3600, phi_k, 'r--',label='Numerical Temperature')
+        if self.Buffo is True:
+            ax1.plot(x_axis_iter*self.dt/3600, phi_buffo, 'b--',alpha=0.5,label='Buffo')
+        ax1.set_xlabel("depth in nodes")
+        ax1.set_ylabel("Phi")
+        #ax1.legend()
+        ax1.set_title("Temperature evolution at {}H".format(timestep))
+        color = 'gray'
+        ax1.legend()
+        fig1.tight_layout()
+        if savefig:
+            fig1.savefig(self.folder_name + "/Liquid Fraction evolution at"+ str(timestep) +"s.png")
+        else:
+            pass
+        plt.show()
+
+    def plot_salinity(self, z_depth, savefig=True):
+        x_axis_iter = np.arange(0,userinput.iter_max-1,1)
+        index = z_depth*self.nz
+        S_k = self.S_k_list[:,int(index)]
+        if self.Buffo is True:
+            S_buffo = self.S_buffo_list[:,int(index)]
+        fig1,(ax1) = plt.subplots(figsize=(10,6))
+        plt.grid()
+        ax1.plot(x_axis_iter*self.dt/3600, S_k[x_axis_iter], 'r--',label='Numerical Temperature')
+        if self.Buffo is True:
+            ax1.plot(x_axis_iter*self.dt/3600, S_buffo[x_axis_iter], 'b--',alpha=0.5,label='Buffo')
+        ax1.set_xlabel("t in hours")
+        ax1.set_ylabel("Salinity in ppt")
+        #ax1.legend()
+        ax1.set_title("Salinity evolution at {}m".format(z_depth))
+        color = 'gray'
+        ax1.legend()
+        fig1.tight_layout()
+        if savefig:
+            fig1.savefig(self.folder_name + "/Salinity evolution at"+ str(z_depth) +"m.png")
+        else:
+            pass
+        plt.show()
+
+    def plot_enthalpy(self, timestep, savefig=False):
+        x_axis_iter = np.arange(0,userinput.iter_max-1,1)
+        index = timestep*3600/self.dt
+        H_k = self.H_k_list[int(index)]
+        H_solid = self.H_solid_list[int(index)]
+        T_k = self.T_k_list[int(index)]
+        H = (H_k - H_solid)/334774
+        fig1,(ax1) = plt.subplots(figsize=(10,6))
+        plt.grid()
+        ax1.plot(T_k,H, 'r--',label='Numerical H_k - H_solid')
+        ax1.set_xlabel("Temperature in K")
+        ax1.set_ylabel("Enthalpy in J")
+        #ax1.legend()
+        ax1.set_title("Enthalpy evolution at {}h".format(timestep))
+        color = 'gray'
+        ax1.legend()
+        fig1.tight_layout()
+        if savefig:
+            fig1.savefig(self.folder_name + "/Enthalpy evolution at"+ str(timestep) +"h.png")
+        else:
+            pass
+        plt.show()
+
+
+#from model.constants_real import k_i, k_w
+
+# dz, dt, iteration = plot_seaicemodel_obj.dz , plot_seaicemodel_obj.dt, plot_seaicemodel_obj.iter_max
+# T = plot_seaicemodel_obj.T_k_list
+# k_x = lambda phi_x: phi_x*k_w + (1-phi_x)*k_i
+# alpha = dt/dz
+# Q_diff = np.zeros((iteration, 99))
+# H_diff = np.zeros((iteration-1, 100))
+# H = plot_seaicemodel_obj.H_k_list
+
+# def flux_i_n(i,n):
+#     R_i = 0.5*(dz/k_x(phi[n,i]) + dz/k_x(phi[n,i+1]))
+#     Q_i = (T[n,i] - T[n,i+1])/R_i
+    
+#     return Q_i
+
+# for t in range(iteration-1):
+#     Q_diff[t] = [(flux_i_n(i,t) - flux_i_n(i-1,t))/dz for i in range(1,100)]
+
+# H_diff = (H[1:,1:] - H[:-1,1:])/dt  
+
+# import matplotlib.pyplot as plt 
+
+# ax_time = np.arange(1,24998,1)
+# ax_size = np.arange(1,100)
+# t_ = 10
+# plt.plot(ax_size, H_diff[t_,:-1], label='Enthalpy diff')
+# plt.plot(ax_size, Q_diff[t_], label='Flux diff')
+# plt.xlabel('space dz nodes')
+# plt.legend()
+# plt.show()

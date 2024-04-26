@@ -54,11 +54,13 @@ def update_liquid_fraction(
 
     for i in range(nz):
         if Stefan is True:        # for MELTING
-            if H[i] < H_solid[i]:
+            if H[i] <= H_solid[i]:
                 phi[i] = 0
             elif H[i] > (H_solid[i] + L):
                 phi[i] = 1
             else:
+                T_diff = T[i] - compute_melting_temperature_from_salinity(S[i])
+                #assert(T[i] == compute_melting_temperature_from_salinity(S[i])), "T - Tm = {}".format(T_diff)  #T[i] = H_solid[i]/c_i
                 phi[i] = (H[i] - H_solid[i]) / L
         # if Stefan is True:
         #     if H[i] < (H_solid[i] - L):       # for FREEZING
@@ -74,7 +76,7 @@ def update_liquid_fraction(
         #     else:
         #         phi[i] = (H[i] - H_melt) / L
         else:
-            if H[i] < H_solid[i]:
+            if H[i] <=H_solid[i]:
                 phi[i] = 0
             elif H[i] > (H_solid[i] + L):
                 phi[i] = 1
@@ -83,7 +85,7 @@ def update_liquid_fraction(
             assert (
                 phi[i] >= 0 or phi[i] <= 1
             ), "liquid fraction has non physical value"
-    return phi * phi_control_for_infinite_values(phi)
+    return phi * phi_control_for_infinite_values(phi), T
 
 
 def update_enthalpy_solid_state(S, nz, liq_rel="Normal"):

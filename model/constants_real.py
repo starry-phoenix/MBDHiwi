@@ -5,13 +5,12 @@ available on GitHub (https://github.com/jbuffo/SlushFund-2.0-interactive).
 They use several formulations and constant provided by Griewank and Notz (2013)
 """
 
-
 ## Define initial values
-S_sw = 34.0 #34.0
+S_sw = 10.0 #34.0
 T_air = 260.0  # numerical instabilities arise for too low
 T_air_Stefan = 270 #300.0 # FREEZING # MELTING
-phi_ini = 0 # FREEZING
-phi_ini_Stefan = 0.0  # FREEZING
+phi_ini = 1 # FREEZING
+phi_ini_Stefan = 1  # FREEZING
 
 ###
 beta = 0.0005836  # Coefficient for density dependence on salinity
@@ -29,7 +28,7 @@ c_i = 2000  # Specific heat of ice
 c_w = c_br #4200  # specific heat of water
 L = 334774  # Latent heat of fusion ice<->water (J/Kg)
 rho_i = 917  # Density of Ice (Kg/m^3)
-rho_br = 1028  # Density of Ocean (used in volume averaging - 1D grav. drainage uses delta S) 34ppt NaCl-1027                                     #  12.3ppt MgSO4-1012, 100pppt-1103, 282ppt-1323
+rho_br = rho_i #1028  # Density of Ocean (used in volume averaging - 1D grav. drainage uses delta S) 34ppt NaCl-1027                                     #  12.3ppt MgSO4-1012, 100pppt-1103, 282ppt-1323
 rho_w = rho_br #1000
 m = 2  # Cementation exponent for Archies equation
 g = 9.8  # Earth Gravity

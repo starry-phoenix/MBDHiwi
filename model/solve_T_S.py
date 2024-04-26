@@ -124,7 +124,7 @@ class AdvectionDiffusion:
                     self.lower_A[i - 1] = -self.factor1[i]
 
 
-        if self.argument == "salinity":
+        if self.argument == "salinity1":
             # non-pragmatic Neumann at the top
             # self.upper_A[0] = -1 * self.factor1[0]
             # self.main_A[0] = 2 * self.factor1[0] + 1
