@@ -10,10 +10,9 @@ if userinput.constants == "real":
 else:
     from model.constants_debug import T_air_Stefan, Tm_w, L, c_i, k_i, rho_i, c_br, k_br, rho_br, D_s, S_sw
 
-S_sw = S_sw/10.0
+S_sw = S_sw
 # TODO: check if the concentration is dependent on previous iterations or vice-versa
 # TODO: implement mushy layer consideration with liquid fraction check paper
-
 
 def stefan_problem(t):
     """

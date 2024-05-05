@@ -25,7 +25,7 @@ def compute_melting_temperature_from_salinity(S, liq_rel="Normal"):
     if liq_rel not in ["Normal", "FREZCHEM"]:
         raise TypeError("liquid relation not available")
     if liq_rel == "Normal":
-        Tm_sw = Tm_w - 1.853 * S / 28.0  # Tm_w melting temperature pure ice
+        Tm_sw = Tm_w*np.ones(S.shape) #- 1.853 * S / 28.0  # Tm_w melting temperature pure ice
     elif liq_rel == "FREZCHEM":
         Tm_sw = Tm_w -(-(9.1969758*(1e-05)*S**2)-0.03942059*S+272.63617665)    # FREZCHEM seawater approximation
     else:

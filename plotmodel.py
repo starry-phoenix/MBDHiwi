@@ -5,6 +5,8 @@ import numpy as np
 import userinput
 import time
 import pandas as pd
+from model.constants_real import Tm_w, S_sw
+np.seterr(divide='ignore', invalid='ignore')
 
 class PlotModel(SeaIceModel):
     def __init__(self) -> None:
@@ -30,6 +32,18 @@ class PlotModel(SeaIceModel):
         self.T_k_diff_infnorm = self.infinity_norm(self.T_k_diff)
         self.T_k_diff_L2norm = self.two_norm(self.T_k_diff)
         self.T_k_diff_L1norm = self.one_norm(self.T_k_diff)
+    
+    def phi_slope(self,iteration):
+        phi = self.phi_k_list[iteration]
+        # T = self.T_k_list[iteration]
+        # phi_diff = np.roll(phi,-1)[:-1]-phi[:-1] 
+        # T_diff = np.roll(T,-1)[:-1]- T[:-1] 
+        # slope = phi_diff/T_diff
+        # slope = np.round(np.nan_to_num(slope, posinf=0.0), 1)
+        mush_idx = np.intersect1d(np.where(phi<1.0), np.where(phi>0.0))
+        if mush_idx.size == 0:
+            mush_idx = np.where(phi==1.0)[0]
+        return mush_idx
 
     def plot_error_temp_diff(self, zoom_x, savefig="True"):
         x_axis_iter = np.arange(0,zoom_x,1)
@@ -93,12 +107,17 @@ class PlotModel(SeaIceModel):
     
     def plot_depth_over_time(self):
         x_axis_iter = np.arange(0,userinput.iter_max-1,1)
+        depth_mush = np.append(np.arange(0,1,0.01),1.0)
+        mush_list_y1 = np.array([[depth_mush[self.phi_slope(i)[0]], depth_mush[self.phi_slope(i)[-1]]] for i in x_axis_iter])
+        #mush_list_y2 = [depth_mush[self.phi_slope(i)[-1]] for i in x_axis_iter]
+        depth = np.array(self.thickness_list_Buffo[:len(x_axis_iter)])
         plt.figure(figsize=(10,6))
         plt.grid()
         plt.plot(x_axis_iter*self.dt/3600, self.thickness_list[:len(x_axis_iter)], 'r--',label='Numerical Depth')
         plt.plot(x_axis_iter*self.dt/3600, self.depth_stefan_all[:len(x_axis_iter)], 'k',label='Analytical Depth')
         if self.Buffo is True:
             plt.plot(x_axis_iter*self.dt/3600, self.thickness_list_Buffo[:len(x_axis_iter)], 'b-.',alpha=0.5,label='Buffo Depth')
+        plt.fill_between(x_axis_iter*self.dt/3600, mush_list_y1[:,0], mush_list_y1[:,1], color='gray', alpha=0.2, label='Mushy Layer')
         plt.xlabel("t in hours")
         plt.ylabel("Depth in m")
         plt.legend()
@@ -201,22 +220,30 @@ class PlotModel(SeaIceModel):
     def plot_enthalpy(self, timestep, savefig=False):
         x_axis_iter = np.arange(0,userinput.iter_max-1,1)
         index = timestep*3600/self.dt
+        mush = self.phi_slope(int(index))
+        phi = self.phi_k_list[int(index)]
         H_k = self.H_k_list[int(index)]
         H_solid = self.H_solid_list[int(index)]
         T_k = self.T_k_list[int(index)]
         H = (H_k - H_solid)/334774
+        T_melt = Tm_w 
+        T_interface = self.Temp_interface[int(index)]
         fig1,(ax1) = plt.subplots(figsize=(10,6))
         plt.grid()
-        ax1.plot(T_k,H, 'r--',label='Numerical H_k - H_solid')
+        ax1.plot(T_k,phi, 'r--',label='Phi')
+        ax1.fill_betweenx(H, T_k[mush][0], T_k[mush][-1], color='gray', alpha=0.2, label='Mushy Layer')
         ax1.set_xlabel("Temperature in K")
-        ax1.set_ylabel("Enthalpy in J")
-        #ax1.legend()
-        ax1.set_title("Enthalpy evolution at {}h".format(timestep))
+        ax1.set_ylabel("Liquid Fraction $\phi$")
+        ax1.set_title("Liquid Fraction Vs Temperature at {}h".format(timestep))
         color = 'gray'
-        ax1.legend()
+        ax3 = ax1.twinx()
+        ax3.axvline(T_melt, color='b', linestyle='dashed', label='T_melt:'+str(round(T_melt,2)))
+        ax3.axvline(T_interface, color='g', linestyle='dashed', label='T_interface:' + str(round(T_interface,2)))
         fig1.tight_layout()
+        ax1.legend(loc=0)
+        ax3.legend(loc=1)
         if savefig:
-            fig1.savefig(self.folder_name + "/Enthalpy evolution at"+ str(timestep) +"h.png")
+            fig1.savefig(self.folder_name + "/LiqVsTemp evolution at"+ str(timestep) +"h.png")
         else:
             pass
         plt.show()

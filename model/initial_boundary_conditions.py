@@ -16,11 +16,11 @@ else:
 )
 
 def temperature_IC(T_IC, nz):
-    # Tm = compute_melting_temperature_from_salinity(S)
+    Tm = compute_melting_temperature_from_salinity(S_sw)
     Tm_sw = 273.15 - 1.918295  # compute_melting_temperature_from_salinity(S_sw)
     if T_IC == "T(S)":
         T = (
-            np.ones(nz, dtype=np.float64) * 271.25
+            np.ones(nz, dtype=np.float64) * Tm
         )  #  compute_melting_temperature_from_salinity(S)
     #     T = np.ones(nz, dtype=np.float64) * Tm + 0.001  # slightly above freezing
     elif T_IC == "T_Stefan":
@@ -155,7 +155,7 @@ def compute_melting_temperature_from_salinity(S):
     ----------
         Tm_b    melting temperature brine/sea water           [K]
     """
-    Tm_sw = Tm_w - 1.853 * S / 28.0  # Tm_w melting temperature pure ice
+    Tm_sw = Tm_w #- 1.853 * S / 28.0  # Tm_w melting temperature pure ice
 
     return Tm_sw
 

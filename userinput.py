@@ -29,14 +29,14 @@ S_tol = 0.01
 phi_tol = 0.001
 
 # Temperature, Salinity and Partion coeff IC
-T_IC='Tm_w'     # OR "T(S)" OR "T271.25" OR 'T_Stefan'
-S_IC='S10'           # OR "S_linear" OR "SX" where X is a salinity value; ex S33 with salinity being 33
+T_IC='T(S)'     # OR "T(S)" OR "T271.25" OR 'T_Stefan'
+S_IC='S34'           # OR "S_linear" OR "SX" where X is a salinity value; ex S33 with salinity being 33
 # change S_sw in constants_real.py 
 P_IC='P1'           # OR "P1" OR "P_Stefan" OR 'P0'
 
 # Temperature BC for top layer   
 top_temp = "Stefan"         # OR "T_const_250" OR "T_const_260" OR "T_const_265" OR "T_W3" OR "Stefan"      
-
+phase_type = 1     # 1 or 2
 # for constants = "debug": initial_boundary_conditions.py->L27->replace T_air_Stefan with Tm_w and vice-versa
 def fourier_number_timestep():
     alpha = rho_br*c_br
